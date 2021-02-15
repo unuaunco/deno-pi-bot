@@ -16,7 +16,7 @@ if [ "$UNAME" == "linux" ]; then
     fi
 fi
 
-if ["$DISTRO" == "Raspbian"]; then
+if [ "$DISTRO" == "Raspbian" ]; then
     apt-get update
     apt-get install python3 python3-pip
     python3 -m pip install ansible
