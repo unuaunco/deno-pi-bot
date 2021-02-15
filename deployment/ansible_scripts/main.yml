@@ -1,0 +1,10 @@
+---
+- name: Ansible configuration to ansible host environment
+  hosts: all
+  remote_user: root
+  become: true
+  become_user: root
+
+  roles:
+    - { role: deno }
+    - { role: mongo }

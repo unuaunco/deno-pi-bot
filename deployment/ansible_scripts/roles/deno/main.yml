@@ -1,0 +1,16 @@
+---
+# Install and configure deno
+
+- name: Download deno installation script
+  get_url:
+    url: https://deno.land/x/install@v0.1.4/install.sh
+    dest: ~/deno_install.sh
+    mode: '0750'
+
+- name: Install deno
+  script: ~/deno_install.sh
+
+- name: Remove deno installation script
+  file:
+    path: ~/deno_install.sh
+    state: absent

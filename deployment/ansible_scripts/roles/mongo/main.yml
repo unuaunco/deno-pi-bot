@@ -1,0 +1,14 @@
+---
+# Installation of mongodb
+
+- name: install mongo
+  apt:
+    name: mongodb
+    update_cache: yes
+  when: ansible_facts['os_family'] == "Raspbian"
+
+- name: enable mongo
+  systemd:
+    state: started
+    name: mongodb
+  when: ansible_facts['os_family'] == "Raspbian"
