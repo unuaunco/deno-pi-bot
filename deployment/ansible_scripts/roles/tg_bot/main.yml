@@ -1,0 +1,5 @@
+---
+# Deploy project
+
+- name: Add deno run to the cron 
+  

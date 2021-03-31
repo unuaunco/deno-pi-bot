@@ -1,5 +1,5 @@
 import { Model, DataTypes, Relationships } from "../deps.ts";
-import { Storage, Transaction } from "./import.ts";
+import { Storage, Transaction, DialogFlow } from "./import.ts";
 
 export class User extends Model {
     static table = 'users';
@@ -20,10 +20,15 @@ export class User extends Model {
     // Fetch storages binded to this user
     static storages() {
         return this.hasMany(Storage);
-    };
+    }
 
     // Fetch transactions binded to this user
     static transactions() {
         return this.hasMany(Transaction);
-    };
+    }
+
+    //Fetch dialogs binder to this user
+    static dialogs() {
+        return this.hasMany(DialogFlow);
+    }
 }

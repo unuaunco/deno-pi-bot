@@ -19,12 +19,17 @@ export class User extends Model {
     // Fetch storages binded to this user
     static storages() {
         return this.hasMany(Storage);
-    };
+    }
 
     // Fetch transactions binded to this user
     static transactions() {
         return this.hasMany(Transaction);
-    };
+    }
+
+    //Fetch dialogs binder to this user
+    static dialogs() {
+        return this.hasMany(DialogFlow);
+    }
 }
 
 export class Transaction extends Model {
@@ -66,6 +71,30 @@ export class Storage extends Model {
 
     static defaults = {
         currency: "rub",
+    };
+
+    static user() {
+        return this.hasOne(User);
+    }
+}
+
+export class DialogFlow extends Model {
+    static table = 'dialogs';
+    static timestamps = true;
+
+    static fields = {
+        _id: {
+            primaryKey: true,
+        },
+        name: DataTypes.string(32),
+        lastAction: DataTypes.string(32),
+        isLastActionSuccess: DataTypes.BOOLEAN,
+        userId: Relationships.belongsTo(User),
+    };
+
+    static defaults = {
+        lastAction: "",
+        isLastActionSuccess: true,
     };
 
     static user() {

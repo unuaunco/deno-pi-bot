@@ -2,8 +2,9 @@ export {
     DataTypes, 
     Database, 
     Model, 
-    Relationships  
-} from 'https://deno.land/x/denodb/mod.ts';
+    Relationships,
+    MongoDBConnector
+} from 'https://raw.githubusercontent.com/eveningkid/denodb/master/mod.ts';
 
 export {
     TelegramBot,
