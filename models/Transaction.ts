@@ -1,5 +1,5 @@
 import { DataTypes, Model, Relationships } from "../deps.ts";
-import { User } from "./import.ts";
+import { Storage } from "./import.ts";
 
 export class Transaction extends Model {
   static table = "transactions";
@@ -12,7 +12,7 @@ export class Transaction extends Model {
     descrtiption: DataTypes.string(128),
     type: DataTypes.enum(["incoming", "outgoing"]),
     amount: DataTypes.decimal(2, 1),
-    userId: Relationships.belongsTo(User),
+    storageId: Relationships.belongsTo(Storage)
   };
 
   static defaults = {
@@ -21,7 +21,7 @@ export class Transaction extends Model {
     type: "outgoing",
   };
 
-  static user() {
-    return this.hasOne(User);
+  static storage() {
+    return this.hasOne(Storage);
   }
 }
