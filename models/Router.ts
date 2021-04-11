@@ -13,8 +13,8 @@ export class BotRouter {
     this.routes = routes;
   }
 
-  async runRoute(routeName: string, ...args: any[]): Promise<boolean> {
-    await this.routes.forEach(async (route) => {
+  runRoute(routeName: string, ...args: any[]): boolean {
+    this.routes.forEach(async (route) => {
       if (route.routeName === routeName) {
         await route.functionInstance(args);
         return true;
