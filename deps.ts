@@ -10,7 +10,7 @@ export {
 export {
     TelegramBot,
     UpdateType
-} from "https://deno.land/x/telegram_bot_api/mod.ts";
+} from "https://deno.land/x/telegram_bot_api@0.4.0/mod.ts";
 
 export type { 
     InlineKeyboardButton, 
@@ -20,4 +20,4 @@ export type {
     Message, 
     CallbackQuery
     
-} from "https://deno.land/x/telegram_bot_api/mod.ts";
+} from "https://deno.land/x/telegram_bot_api@0.4.0/mod.ts";
