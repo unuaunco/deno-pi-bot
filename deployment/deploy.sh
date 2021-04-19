@@ -35,7 +35,7 @@ if [ "$UNAME" == "linux" ]; then
     fi
 
     if [[ "$DISTRO" == "Ubuntu" ]]; then
-        apt-get -y install -U python3-apt
+        apt-get -y install python3-apt
     fi
 fi
 
