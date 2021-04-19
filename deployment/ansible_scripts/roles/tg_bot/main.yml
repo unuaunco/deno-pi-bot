@@ -24,3 +24,6 @@
     dest: /etc/supervisor/conf.d/denobot.conf
     mode: 0644
 
+- name: Start denobot supervisored app
+  ansible.builtin.shell:
+    cmd: supervisorctl update && supervisorctl restart denobot
