@@ -13,7 +13,7 @@
     mode: '0750'
 
 - name: Install latest deno
-  ansible.builtin.script: /tmp/deno_install.sh -s 1.9.0
+  ansible.builtin.script: /tmp/deno_install.sh -s v1.9.0
 
 - name: Remove deno installation script
   ansible.builtin.file:
