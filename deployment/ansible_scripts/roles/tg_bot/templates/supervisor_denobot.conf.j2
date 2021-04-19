@@ -1,0 +1,10 @@
+[program:denobot]
+command=/{{ ansible_user_id }}/.deno/bin/deno run --allow-net --allow-env --allow-read telega.ts
+directory=/opt/deno-pi-bot
+environment=TOKEN={{ telegram_bot_token }}
+stdout_logfile=/var/log/denobot/denobot.out
+stderr_logfile=/var/log/denobot/denobot.err
+autostart=true
+autorestart=true
+redirect_stderr=true
+stopsignal=QUIT

@@ -1,5 +1,26 @@
 ---
 # Deploy project
 
-- name: Add deno run to the cron 
+- name: Install supervisor
+  ansible.builtin.apt:
+    name: supervisor
+    update_cache: yes
+
+- name: Enable and supervisor daemon
+  ansible.builtin.systemd:
+    name: supervisor
+    enabled: yes
+    state: started
   
+- name: Create logs folder
+  ansible.builtin.file:
+    path: /var/log/denobot/
+    state: directory
+    mode: 0774
+
+- name: Create supervisor config for deno bot
+  ansible.builtin.template:
+    src: supervisor_denobot.conf.j2
+    dest: /etc/supervisor/conf.d/denobot.conf
+    mode: 0644
+

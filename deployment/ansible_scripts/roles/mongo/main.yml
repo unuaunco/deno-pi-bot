@@ -1,14 +1,28 @@
 ---
 # Installation of mongodb
-
-- name: install mongo
-  apt:
-    name: mongodb
+# TODO: base on distributive when: ansible_facts['os_family'] == "Ubuntu"
+- name: Install gnupg
+  ansible.builtin.apt:
+    name: gnupg
     update_cache: yes
-  when: ansible_facts['os_family'] == "Raspbian"
 
-- name: enable mongo
-  systemd:
-    state: started
+- name: Add an Apt mongo signing key
+  ansible.builtin.apt_key:
+    url: https://www.mongodb.org/static/pgp/server-4.4.asc
+    state: present
+
+- name: Add monogo repository into sources list
+  ansible.builtin.apt_repository:
+    repo: deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse
+    state: present
+
+- name: Install mongodb
+  ansible.builtin.apt:
+    name: mongodb-org
+    update_cache: yes
+
+- name: Enable and start mongodb daemon
+  ansible.builtin.systemd:
     name: mongodb
-  when: ansible_facts['os_family'] == "Raspbian"
+    enabled: yes
+    state: started

@@ -2,15 +2,15 @@
 # Install and configure deno
 
 - name: Download deno installation script
-  get_url:
-    url: https://deno.land/x/install@v0.1.4/install.sh
-    dest: ~/deno_install.sh
+  ansible.builtin.get_url:
+    url: https://deno.land/x/install/install.sh
+    dest: deno_install.sh
     mode: '0750'
 
-- name: Install deno
-  script: ~/deno_install.sh
+- name: Install latest deno
+  ansible.builtin.script: deno_install.sh -s 1.9.0
 
 - name: Remove deno installation script
-  file:
-    path: ~/deno_install.sh
+  ansible.builtin.file:
+    path: deno_install.sh
     state: absent
