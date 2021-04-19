@@ -32,10 +32,10 @@ if [ "$UNAME" == "linux" ]; then
         make -j$(nproc) && make install
         $PYTHON_INTERPRETER_PATH -m pip install -U pip
         $PYTHON_INTERPRETER_PATH -m pip install -U virtualenv
-        
-        if [[ "$DISTRO" == "Ubuntu" ]]; then
-            apt-get -y install -U python3-apt
-        fi
+    fi
+    
+    if [[ "$DISTRO" == "Ubuntu" ]]; then
+        apt-get -y install -U python3-apt
     fi
 fi
 
