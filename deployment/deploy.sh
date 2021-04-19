@@ -33,7 +33,7 @@ if [ "$UNAME" == "linux" ]; then
         $PYTHON_INTERPRETER_PATH -m pip install -U pip
         $PYTHON_INTERPRETER_PATH -m pip install -U virtualenv
     fi
-    
+
     if [[ "$DISTRO" == "Ubuntu" ]]; then
         apt-get -y install -U python3-apt
     fi
@@ -44,4 +44,4 @@ $PYTHON_INTERPRETER_PATH -m pip install ansible==2.10.7
 
 export ANSIBLE_HOSTS_KEY_CHECKING=False
 
-ansible-playbook -i ansible_configs/hosts.yml ansible_configs/main.yml
+ansible-playbook -i ansible_scripts/hosts.yml ansible_scripts/main.yml
