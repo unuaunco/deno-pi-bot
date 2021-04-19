@@ -1,6 +1,11 @@
 ---
 # Install and configure deno
 
+- name: Install zip (used for deno)
+  ansible.builtin.apt:
+    name: zip
+    update_cache: yes
+
 - name: Download deno installation script
   ansible.builtin.get_url:
     url: https://deno.land/x/install/install.sh
