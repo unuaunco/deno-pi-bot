@@ -23,6 +23,6 @@
 
 - name: Enable and start mongodb daemon
   ansible.builtin.systemd:
-    name: mongodb
+    name: mongod
     enabled: yes
     state: started
