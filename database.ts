@@ -1,6 +1,5 @@
 // import { MongoClient, Bson } from "https://deno.land/x/mongo@v0.20.1/mod.ts";
 import { Database, MongoDBConnector } from "./deps.ts";
-import { Storage, User, Transaction } from "./models/import.ts";
 import "https://deno.land/x/dotenv/load.ts";
 
 const connector = new MongoDBConnector({

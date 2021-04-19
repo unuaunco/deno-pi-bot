@@ -1,9 +1,9 @@
 /**
  * Try the example right from the terminal
  * MacOS, Linux $:
- * TOKEN=512215541:AAGqR0z0facbFkrgqIacxnw_F49ju_Z0MNY deno run --allow-net --allow-env https://deno.land/x/telegram_bot_api/examples/01-polling.ts
+ * TOKEN=1719600856:AAGskvdjxn7FOJ3kzPXvlZJO_8WxD-1ZTkc deno run --allow-net --allow-env https://deno.land/x/telegram_bot_api/examples/01-polling.ts
  * Windows $:
- * $env:TOKEN="512215541:AAGqR0z0facbFkrgqIacxnw_F49ju_Z0MNY"; deno run --allow-net --allow-env --allow-read telega.ts
+ * $env:TOKEN="1719600856:AAGskvdjxn7FOJ3kzPXvlZJO_8WxD-1ZTkc"; deno run --allow-net --allow-env --allow-read telega.ts
  */
 
 import db from "./database.ts";
@@ -23,10 +23,6 @@ import { createHash } from "https://deno.land/std@0.82.0/hash/mod.ts";
    * }
    */
 
-db.link([User, Storage, Transaction, DialogFlow]);
-
-await db.sync({ drop: false });
-
 import bot from './botInit.ts';
 
 import { straightRouter, callbackRouter } from "./router.ts";
@@ -35,15 +31,14 @@ import { straightRouter, callbackRouter } from "./router.ts";
 bot.on(UpdateType.Message, async ({ message }): Promise<void> => {
   const rr = await straightRouter.runRoute(message?.text!, message);
   if (!rr){
-    await callbackRouter.runRoute('default', message);
+    await straightRouter.runRoute('default', message);
   }
-
   console.log(message);
 });
 
 bot.on(UpdateType.CallbackQuery, async ({ callback_query }) => {
 
-  const rr = await straightRouter.runRoute(callback_query?.data!, callback_query);
+  const rr = await callbackRouter.runRoute(callback_query?.data!, callback_query);
   if (!rr){
     await callbackRouter.runRoute('default', callback_query);
   }

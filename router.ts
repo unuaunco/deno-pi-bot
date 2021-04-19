@@ -10,6 +10,9 @@ const straightRoutes: BotRoute[] = [
     { routeName: views.dialogs.stop.label, functionInstance: views.removeUser }, 
     { routeName: views.dialogs.cacheOut.label, functionInstance: views.insertOutSum }, 
     { routeName: views.dialogs.cacheIn.label, functionInstance: views.insertInSum }, 
+    { routeName: views.dialogs.getBalance.label, functionInstance: views.getBalance }, 
+    { routeName: views.dialogs.createStorage.label, functionInstance: views.storageCreate }, 
+    
     { routeName: 'default', functionInstance: views.returnActions }, 
 
 ];
@@ -18,6 +21,6 @@ const callbackRoutes: BotRoute[] = [
     { routeName: 'default', functionInstance: views.callbackActions },
 ];
 
-export const callbackRouter = new BotRouter(callbackRoutes);
+export const callbackRouter = new BotRouter(callbackRoutes, views);
 
-export const straightRouter = new BotRouter(straightRoutes);
+export const straightRouter = new BotRouter(straightRoutes, views);

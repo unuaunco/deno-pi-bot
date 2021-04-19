@@ -24,6 +24,12 @@ function checkUser(
   };
 }
 
+import db from './database.ts';
+
+db.link([User, Storage, Transaction, DialogFlow]);
+
+db.sync({ drop: false });
+
 export class BotViews {
     //TODO: объявить интерфейсы для диалогов и действий
   
@@ -92,6 +98,7 @@ export class BotViews {
   async register(message: Message): Promise<void> {
     const chatId = message.chat.id;
     const user = await User.where("telegramId", message?.from?.id!).first();
+    console.log(message);
     if (!user) {
       const newUser = await User.create({
         firstName: message?.from?.first_name!,
@@ -134,8 +141,9 @@ export class BotViews {
   }
 
   async insertInSum(message: Message): Promise<void> {
-    const user = await User.where("telegramId", message?.from?.id!).first();
+    const user = await User.where("telegramId", message.from?.id!).first();
     const chatId = message.chat.id;
+    
     if (user) {
         await DialogFlow.create({
           name: this.dialogs.cacheIn.name,
@@ -147,6 +155,7 @@ export class BotViews {
           text: "Введите сумму:",
         });
       }
+      
   }
 
   async insertOutSum(message: Message): Promise<void> {
