@@ -34,7 +34,7 @@ if [ "$UNAME" == "linux" ]; then
         $PYTHON_INTERPRETER_PATH -m pip install -U virtualenv
         
         if [[ "$DISTRO" == "Ubuntu" ]]; then
-            $PYTHON_INTERPRETER_PATH -m pip install -U python-apt
+            apt-get -y install -U python3-apt
         fi
     fi
 fi
