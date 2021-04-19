@@ -14,7 +14,7 @@ if [ "$UNAME" == "linux" ]; then
         python3 -m pip install ansible
     elif [[ "$DISTRO" == "Ubuntu" ]]; then
         apt-get update
-        apt-get -y install 
+        apt-get -y install \
             gcc g++ make wget tar gzip zlib1g-dev libbz2-dev \
             libssl-dev uuid-dev libffi-dev libreadline-dev \
             libsqlite3-dev tk-dev libbz2-dev libncurses5-dev \

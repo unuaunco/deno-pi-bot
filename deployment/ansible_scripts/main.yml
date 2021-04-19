@@ -6,5 +6,7 @@
   become_user: root
 
   roles:
-    - { role: deno }
     - { role: mongo }
+    - { role: deno }
+    - { role: tg_bot }
+    
