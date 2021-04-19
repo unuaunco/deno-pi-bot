@@ -4,13 +4,13 @@
 - name: Download deno installation script
   ansible.builtin.get_url:
     url: https://deno.land/x/install/install.sh
-    dest: deno_install.sh
+    dest: /tmp/deno_install.sh
     mode: '0750'
 
 - name: Install latest deno
-  ansible.builtin.script: deno_install.sh -s 1.9.0
+  ansible.builtin.script: /tmp/deno_install.sh -s 1.9.0
 
 - name: Remove deno installation script
   ansible.builtin.file:
-    path: deno_install.sh
+    path: /tmp/deno_install.sh
     state: absent
