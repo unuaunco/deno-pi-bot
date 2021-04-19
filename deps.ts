@@ -4,7 +4,7 @@ export {
     Model, 
     Relationships,
     MongoDBConnector
-} from 'https://raw.githubusercontent.com/eveningkid/denodb/master/mod.ts';
+} from 'https://deno.land/x/denodb@v1.0.24/mod.ts';
 
 // import type { InlineKeyboardButton, Message, InlineKeyboardMarkup } from "https://deno.land/x/telegram_bot_api/mod.ts"
 export {
