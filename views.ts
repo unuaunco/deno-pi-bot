@@ -38,24 +38,9 @@ export interface Drop {
   drop: boolean;
 }
 
-const dropDb: Drop = { drop: false };
+var dropDb: Drop = { drop: true };
 
 db.sync(dropDb);
-
-if (dropDb.drop == true) {
-  await Currency.create({
-    name: "rub",
-    precision: 2,
-  });
-  await Currency.create({
-    name: "usd",
-    precision: 2,
-  });
-  await Currency.create({
-    name: "aud",
-    precision: 2,
-  });
-}
 
 export class BotViews {
   //TODO: объявить интерфейсы для диалогов и действий
@@ -116,6 +101,46 @@ export class BotViews {
     ],
   };
 
+  private checkAmountValue(value: string): boolean{
+    const reg = /^\d+(?:\.|,)\d{1,2}$/g;
+    const reg2 = /^\d+$/g;
+    if (value.match(reg) || value.match(reg2)) {
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+  private formatInputMoney(value: string): number {
+    const pointArray = value.replace(",",".").split(".");
+    if(pointArray.length > 1){
+      if (pointArray[1].length == 1){
+        pointArray[1] = pointArray[1] +'0'
+      }
+      return Number(pointArray[0] + pointArray[1])
+    }
+    else{
+      return Number(pointArray[0] + '00')
+    }
+  }
+
+  private formatOutputMoney(value: number): string{
+    const resultBalance = String(value);
+    if (value === 0){
+      return "0.00";
+    }
+
+    return `${
+      resultBalance.slice(0, resultBalance.length - 2)
+    }.${
+      resultBalance.slice(
+        resultBalance.length - 2,
+        resultBalance.length,
+      )
+    }`
+  }
+
   bot: TelegramBot;
 
   constructor(tgBot: TelegramBot) {
@@ -126,6 +151,12 @@ export class BotViews {
     const chatId = message.chat.id;
     const user = await User.where("telegramId", message?.from?.id!).first();
     console.log(message);
+    if (dropDb.drop == true) {
+      await Currency.create({
+        name: "rub",
+        precision: 2
+      });
+    }
     if (!user) {
       const newUser = await User.create({
         firstName: message?.from?.first_name!,
@@ -262,20 +293,9 @@ export class BotViews {
           if (
             lastDialog.lastAction === this.dialogs.cacheIn.actions.inputAmount
           ) {
-            const reg = new RegExp("[0-9]+(?:\.|,)[0-9]+");
-            const reg2 = new RegExp("[0-9]+");
-            if (reg.test(message?.text!) || reg2.test(message?.text!)) {
-              let amount: number;
-              if(reg.test(message?.text!)){
-                amount = Number(
-                  message?.text!.replace(",", "").replace(".", ""),
-                )
-              }
-              else{
-                amount = Number(
-                  `${message?.text!}00`
-                )
-              }
+
+            if (this.checkAmountValue(message?.text!)) {
+              const amount: number = this.formatInputMoney(message?.text!);
               await Transaction.create({
                 type: "incoming",
                 amount: amount,
@@ -320,20 +340,8 @@ export class BotViews {
           if (
             lastDialog.lastAction === this.dialogs.cacheOut.actions.inputAmount
           ) {
-            const reg = new RegExp("[0-9]+(?:\.|,)[0-9]+");
-            const reg2 = new RegExp("[0-9]+");
-            if (reg.test(message?.text!) || reg2.test(message?.text!)) {
-              let amount: number;
-              if(reg.test(message?.text!)){
-                amount = Number(
-                  message?.text!.replace(",", "").replace(".", ""),
-                )
-              }
-              else{
-                amount = Number(
-                  `${message?.text!}00`
-                )
-              }
+            if (this.checkAmountValue(message?.text!)) {
+              const amount: number = this.formatInputMoney(message?.text!);
               await Transaction.create({
                 type: "outgoing",
                 amount: amount,
@@ -427,14 +435,15 @@ export class BotViews {
               .where("userId", JSON.stringify(user._id))
               .where("name", data!)
               .first();
-            usrStorage.balance = Number(Number(usrStorage.balance)) +
+            const resultBalance = Number(Number(usrStorage.balance)) +
               Number(Number(lastTransaction.amount));
+            usrStorage.balance = resultBalance;
             await usrStorage.update();
 
             lastDialog.lastAction = "finished";
             await lastDialog.update();
 
-            text = "Поступление добавлено";
+            text = `Поступление добавлено. Баланс счёта ${data!} - ${this.formatOutputMoney(resultBalance)}`;
           }
         } else if (lastDialog.name === this.dialogs.cacheOut.name) {
           if (
@@ -450,14 +459,15 @@ export class BotViews {
               .where("userId", JSON.stringify(user._id))
               .where("name", data!)
               .first();
-            usrStorage.balance = Number(Number(usrStorage.balance)) -
+            const resultBalance = Number(Number(usrStorage.balance)) -
               Number(Number(lastTransaction.amount));
+            usrStorage.balance = resultBalance;
             await usrStorage.update();
 
             lastDialog.lastAction = "finished";
             await lastDialog.update();
 
-            text = "Расход добавлен";
+            text = `Расход добавлен. Баланс счёта ${data!} - ${this.formatOutputMoney(resultBalance)}`;
           }
         } else if (lastDialog.name === this.dialogs.getBalance.name) {
           if (
@@ -468,37 +478,21 @@ export class BotViews {
               const storageBalance = await Storage
                 .where("userId", JSON.stringify(user._id))
                 .all();
-              let resultBalance = new String();
+              let resultBalance = 0;
 
               for (const idx in storageBalance) {
-                resultBalance = String(
-                  Number(resultBalance) +
-                    Number(storageBalance[idx].balance),
-                );
+                resultBalance = Number(resultBalance) +
+                    Number(storageBalance[idx].balance);
               }
-              console.log(Number(resultBalance));
-              text = `Суммарный баланс счетов: ${
-                resultBalance.slice(0, resultBalance.length - 2)
-              }.${
-                resultBalance.slice(
-                  resultBalance.length - 2,
-                  resultBalance.length,
-                )
-              }`;
+              console.log(resultBalance);
+              text = `Суммарный баланс счетов: ${this.formatOutputMoney(resultBalance)}`;
             } else {
               const usrStorage = await Storage
                 .where("userId", JSON.stringify(user._id))
                 .where("name", data!)
                 .first();
-              const balance = String(usrStorage.balance);
-							text = `Баланс счёта "${usrStorage.name}": ${
-                balance.slice(0, balance.length - 2)
-							}.${
-								balance.slice(
-									balance.length - 2,
-									balance.length,
-								)
-							}`;
+              const resultBbalance = this.formatOutputMoney(Number(usrStorage.balance));
+              text = `Баланс счёта "${usrStorage.name}": ${resultBbalance}`;
             }
             //write sequentially
             //   lastDialog.lastAction = "finished";
