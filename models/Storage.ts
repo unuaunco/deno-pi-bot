@@ -1,5 +1,5 @@
 import { Model, DataTypes, Relationships } from "../deps.ts";
-import { User } from "./import.ts";
+import { User, Currency } from "./import.ts";
 
 export class Storage extends Model {
     static table = 'storages';
@@ -10,16 +10,20 @@ export class Storage extends Model {
             primaryKey: true,
         },
         name: DataTypes.string(32),
-        currency: DataTypes.enum(["rub", "usd", "aud" ]),
-        balance: DataTypes.decimal(2, 1),
+        balance: DataTypes.BIG_INTEGER,
+        currency: Relationships.belongsTo(Currency),
         userId: Relationships.belongsTo(User),
     };
 
     static defaults = {
-        currency: "rub",
+        currency: "1",
     };
 
     static user() {
         return this.hasOne(User);
+    }
+
+    static currency() {
+        return this.hasOne(Currency);
     }
 }

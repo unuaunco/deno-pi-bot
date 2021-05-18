@@ -1,12 +1,18 @@
-import { DialogFlow, Storage, Transaction, User } from "./models/import.ts";
 import {
+  Currency,
+  DialogFlow,
+  Storage,
+  Transaction,
+  User,
+} from "./models/import.ts";
+import {
+  CallbackQuery,
   InlineKeyboardButton,
   InlineKeyboardMarkup,
+  Message,
   ReplyKeyboardMarkup,
   TelegramBot,
   UpdateType,
-  Message, 
-  CallbackQuery
 } from "./deps.ts";
 
 function checkUser(
@@ -24,15 +30,36 @@ function checkUser(
   };
 }
 
-import db from './database.ts';
+import db from "./database.ts";
 
-db.link([User, Storage, Transaction, DialogFlow]);
+db.link([User, Storage, Transaction, Currency, DialogFlow]);
 
-db.sync({ drop: false });
+export interface Drop {
+  drop: boolean;
+}
+
+const dropDb: Drop = { drop: false };
+
+db.sync(dropDb);
+
+if (dropDb.drop == true) {
+  await Currency.create({
+    name: "rub",
+    precision: 2,
+  });
+  await Currency.create({
+    name: "usd",
+    precision: 2,
+  });
+  await Currency.create({
+    name: "aud",
+    precision: 2,
+  });
+}
 
 export class BotViews {
-    //TODO: объявить интерфейсы для диалогов и действий
-  
+  //TODO: объявить интерфейсы для диалогов и действий
+
   public dialogs = {
     cacheIn: {
       name: "cacheIn",
@@ -65,18 +92,18 @@ export class BotViews {
       },
     },
     start: {
-        name: "start",
-        label: "/start",
-        actions: {
-            startBot: "startBot",
-        }
+      name: "start",
+      label: "/start",
+      actions: {
+        startBot: "startBot",
+      },
     },
     stop: {
-        name: "stop",
-        label: "/stop",
-        actions: {
-            startBot: "stop",
-        }
+      name: "stop",
+      label: "/stop",
+      actions: {
+        startBot: "stop",
+      },
     },
   };
 
@@ -91,7 +118,7 @@ export class BotViews {
 
   bot: TelegramBot;
 
-  constructor(tgBot: TelegramBot){
+  constructor(tgBot: TelegramBot) {
     this.bot = tgBot;
   }
 
@@ -110,7 +137,7 @@ export class BotViews {
       });
       await Storage.create({
         name: "По-умолчанию",
-        balance: 0.00,
+        balance: 0,
         userId: JSON.stringify(newUser._id),
       });
       await this.bot.sendMessage({
@@ -143,83 +170,82 @@ export class BotViews {
   async insertInSum(message: Message): Promise<void> {
     const user = await User.where("telegramId", message.from?.id!).first();
     const chatId = message.chat.id;
-    
+
     if (user) {
-        await DialogFlow.create({
-          name: this.dialogs.cacheIn.name,
-          userId: JSON.stringify(user._id),
-          lastAction: this.dialogs.cacheIn.actions.inputAmount,
-        });
-        await this.bot.sendMessage({
-          chat_id: chatId,
-          text: "Введите сумму:",
-        });
-      }
-      
+      await DialogFlow.create({
+        name: this.dialogs.cacheIn.name,
+        userId: JSON.stringify(user._id),
+        lastAction: this.dialogs.cacheIn.actions.inputAmount,
+      });
+      await this.bot.sendMessage({
+        chat_id: chatId,
+        text: "Введите сумму:",
+      });
+    }
   }
 
   async insertOutSum(message: Message): Promise<void> {
     const user = await User.where("telegramId", message?.from?.id!).first();
     const chatId = message.chat.id;
     if (user) {
-        await DialogFlow.create({
-          name: this.dialogs.cacheOut.name,
-          userId: JSON.stringify(user._id),
-          lastAction: this.dialogs.cacheOut.actions.inputAmount,
-        });
-        await this.bot.sendMessage({
-          chat_id: chatId,
-          text: "Введите сумму:",
-        });
-      }
+      await DialogFlow.create({
+        name: this.dialogs.cacheOut.name,
+        userId: JSON.stringify(user._id),
+        lastAction: this.dialogs.cacheOut.actions.inputAmount,
+      });
+      await this.bot.sendMessage({
+        chat_id: chatId,
+        text: "Введите сумму:",
+      });
+    }
   }
 
   async getBalance(message: Message): Promise<void> {
     const user = await User.where("telegramId", message?.from?.id!).first();
     const chatId = message.chat.id;
     if (user) {
-        await DialogFlow.create({
-          name: this.dialogs.getBalance.name,
-          userId: JSON.stringify(user._id),
-          lastAction: this.dialogs.getBalance.actions.storageSelect,
-        });
-        const userStorages: any = [];
+      await DialogFlow.create({
+        name: this.dialogs.getBalance.name,
+        userId: JSON.stringify(user._id),
+        lastAction: this.dialogs.getBalance.actions.storageSelect,
+      });
+      const userStorages: any = [];
+      userStorages.push([{
+        text: "Сводный",
+        callback_data: "Сводный",
+      }]);
+      const storages = await Storage.where("userId", JSON.stringify(user._id))
+        .all();
+      for (const idx in storages) {
         userStorages.push([{
-          text: "Сводный",
-          callback_data: "Сводный",
+          text: storages[idx].name,
+          callback_data: storages[idx].name,
         }]);
-        const storages = await Storage.where("userId", JSON.stringify(user._id))
-          .all();
-        for (const idx in storages) {
-          userStorages.push([{
-            text: storages[idx].name,
-            callback_data: storages[idx].name,
-          }]);
-        }
-        await this.bot.sendMessage({
-          chat_id: chatId,
-          text: "Выберите счёт",
-          reply_markup: {
-            inline_keyboard: userStorages,
-          },
-        });
       }
+      await this.bot.sendMessage({
+        chat_id: chatId,
+        text: "Выберите счёт",
+        reply_markup: {
+          inline_keyboard: userStorages,
+        },
+      });
+    }
   }
 
   async storageCreate(message: Message): Promise<void> {
     const user = await User.where("telegramId", message?.from?.id!).first();
     const chatId = message.chat.id;
     if (user) {
-        await DialogFlow.create({
-          name: this.dialogs.createStorage.name,
-          userId: JSON.stringify(user._id),
-          lastAction: this.dialogs.createStorage.actions.newStorage,
-        });
-        await this.bot.sendMessage({
-          chat_id: chatId,
-          text: "Введите название счёта:",
-        });
-      }
+      await DialogFlow.create({
+        name: this.dialogs.createStorage.name,
+        userId: JSON.stringify(user._id),
+        lastAction: this.dialogs.createStorage.actions.newStorage,
+      });
+      await this.bot.sendMessage({
+        chat_id: chatId,
+        text: "Введите название счёта:",
+      });
+    }
   }
 
   async returnActions(message: Message): Promise<void> {
@@ -227,125 +253,155 @@ export class BotViews {
     const user = await User.where("telegramId", message?.from?.id!).first();
     const chatId = message.chat.id;
     if (user) {
-        const lastDialog = await DialogFlow
-          .where("userId", JSON.stringify(user._id))
-          .orderBy("_id", "desc")
-          .first();
-        if (lastDialog) {
-          if (lastDialog.name === this.dialogs.cacheIn.name) {
-            if (lastDialog.lastAction === this.dialogs.cacheIn.actions.inputAmount) {
-              const reg = new RegExp("[0-9]+(?:\.|,)[0-9]+");
-              if (reg.test(message?.text!)) {
-                await Transaction.create({
-                  type: "incoming",
-                  amount: Number(message?.text!.replace(",", ".")),
-                  userId: JSON.stringify(user._id),
-                });
-  
-                const userStorages: any = [];
-                const storages = await Storage.where(
-                  "userId",
-                  JSON.stringify(user._id),
-                ).all();
-                
-                for (const idx in storages) {
-                  userStorages.push({
-                    text: storages[idx].name,
-                    callback_data: storages[idx].name,
-                  });
-                }
-  
-                await this.bot.sendMessage({
-                  chat_id: chatId,
-                  text: "Выберите счёт",
-                  reply_markup: {
-                    inline_keyboard: [
-                      userStorages,
-                    ],
-                  },
-                });
-  
-                lastDialog.lastAction = this.dialogs.cacheIn.actions.storageSelect;
-                await lastDialog.update();
-              } else {
-                await this.bot.sendMessage({
-                  chat_id: chatId,
-                  text:
-                    "Не могу распознать введённую сумму. Ведите значение в виде 000.00",
+      const lastDialog = await DialogFlow
+        .where("userId", JSON.stringify(user._id))
+        .orderBy("_id", "desc")
+        .first();
+      if (lastDialog) {
+        if (lastDialog.name === this.dialogs.cacheIn.name) {
+          if (
+            lastDialog.lastAction === this.dialogs.cacheIn.actions.inputAmount
+          ) {
+            const reg = new RegExp("[0-9]+(?:\.|,)[0-9]+");
+            const reg2 = new RegExp("[0-9]+");
+            if (reg.test(message?.text!) || reg2.test(message?.text!)) {
+              let amount: number;
+              if(reg.test(message?.text!)){
+                amount = Number(
+                  message?.text!.replace(",", "").replace(".", ""),
+                )
+              }
+              else{
+                amount = Number(
+                  `${message?.text!}00`
+                )
+              }
+              await Transaction.create({
+                type: "incoming",
+                amount: amount,
+                userId: JSON.stringify(user._id),
+              });
+
+              const userStorages: any = [];
+              const storages = await Storage.where(
+                "userId",
+                JSON.stringify(user._id),
+              ).all();
+
+              for (const idx in storages) {
+                userStorages.push({
+                  text: storages[idx].name,
+                  callback_data: storages[idx].name,
                 });
               }
+
+              await this.bot.sendMessage({
+                chat_id: chatId,
+                text: "Выберите счёт",
+                reply_markup: {
+                  inline_keyboard: [
+                    userStorages,
+                  ],
+                },
+              });
+
+              lastDialog.lastAction =
+                this.dialogs.cacheIn.actions.storageSelect;
+              await lastDialog.update();
+            } else {
+              await this.bot.sendMessage({
+                chat_id: chatId,
+                text:
+                  "Не могу распознать введённую сумму. Ведите значение в виде 000.00 или 000",
+              });
             }
-          } else if (lastDialog.name === this.dialogs.cacheOut.name) {
-            if (lastDialog.lastAction === this.dialogs.cacheOut.actions.inputAmount) {
-              const reg = new RegExp("[0-9]+(?:\.|,)[0-9]+");
-              if (reg.test(message?.text!)) {
-                await Transaction.create({
-                  type: "outgoing",
-                  amount: Number(message?.text!.replace(",", ".")),
-                  userId: JSON.stringify(user._id),
-                });
-  
-                const userStorages: any = [];
-                const storages = await Storage
-                  .where("userId", JSON.stringify(user._id))
-                  .all();
-                for (const idx in storages) {
-                  userStorages.push({
-                    text: storages[idx].name,
-                    callback_data: storages[idx].name,
-                  });
-                }
-  
-                await this.bot.sendMessage({
-                  chat_id: chatId,
-                  text: "Выберите счёт",
-                  reply_markup: {
-                    inline_keyboard: [
-                      userStorages,
-                    ],
-                  },
-                });
-  
-                lastDialog.lastAction = this.dialogs.cacheIn.actions.storageSelect;
-                await lastDialog.update();
-              } else {
-                await this.bot.sendMessage({
-                  chat_id: chatId,
-                  text:
-                    "Не могу распознать введённую сумму. Ведите значение в виде 000.00",
-                });
-              }
-            }
-          } else if (lastDialog.name === this.dialogs.createStorage.name) {
-            await Storage.create({
-              name: message?.text!,
-              balance: 0.00,
-              userId: JSON.stringify(user._id),
-            });
-  
-            lastDialog.lastAction = "finished";
-            lastDialog.update();
-  
-            await this.bot.sendMessage({
-              chat_id: chatId,
-              text: "Счёт добавлен",
-            });
           }
-        } else {
+        } else if (lastDialog.name === this.dialogs.cacheOut.name) {
+          if (
+            lastDialog.lastAction === this.dialogs.cacheOut.actions.inputAmount
+          ) {
+            const reg = new RegExp("[0-9]+(?:\.|,)[0-9]+");
+            const reg2 = new RegExp("[0-9]+");
+            if (reg.test(message?.text!) || reg2.test(message?.text!)) {
+              let amount: number;
+              if(reg.test(message?.text!)){
+                amount = Number(
+                  message?.text!.replace(",", "").replace(".", ""),
+                )
+              }
+              else{
+                amount = Number(
+                  `${message?.text!}00`
+                )
+              }
+              await Transaction.create({
+                type: "outgoing",
+                amount: amount,
+                userId: JSON.stringify(user._id),
+              });
+
+              const userStorages: any = [];
+              const storages = await Storage
+                .where("userId", JSON.stringify(user._id))
+                .all();
+              for (const idx in storages) {
+                userStorages.push({
+                  text: storages[idx].name,
+                  callback_data: storages[idx].name,
+                });
+              }
+
+              await this.bot.sendMessage({
+                chat_id: chatId,
+                text: "Выберите счёт",
+                reply_markup: {
+                  inline_keyboard: [
+                    userStorages,
+                  ],
+                },
+              });
+
+              lastDialog.lastAction =
+                this.dialogs.cacheIn.actions.storageSelect;
+              await lastDialog.update();
+            } else {
+              await this.bot.sendMessage({
+                chat_id: chatId,
+                text:
+                  "Не могу распознать введённую сумму. Ведите значение в виде 000.00 или 000",
+              });
+            }
+          }
+        } else if (lastDialog.name === this.dialogs.createStorage.name) {
+          await Storage.create({
+            name: message?.text!,
+            balance: 0,
+            userId: JSON.stringify(user._id),
+          });
+
+          lastDialog.lastAction = "finished";
+          lastDialog.update();
+
           await this.bot.sendMessage({
             chat_id: chatId,
-            text: "Chose a pill",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  { text: "🔴", callback_data: "red" },
-                  { text: "🔵", callback_data: "blue" },
-                ],
-              ],
-            },
+            text: "Счёт добавлен",
           });
         }
+      } else {
+        await this.bot.sendMessage({
+          chat_id: chatId,
+          text: "Chose a pill",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: "🔴", callback_data: "red" },
+                { text: "🔵", callback_data: "blue" },
+              ],
+            ],
+          },
+        });
       }
+    }
   }
 
   async callbackActions(callbackQuery: CallbackQuery): Promise<void> {
@@ -359,71 +415,90 @@ export class BotViews {
         .first();
       if (lastDialog) {
         if (lastDialog.name === this.dialogs.cacheIn.name) {
-          if (lastDialog.lastAction === this.dialogs.cacheIn.actions.storageSelect) {
+          if (
+            lastDialog.lastAction === this.dialogs.cacheIn.actions.storageSelect
+          ) {
             const lastTransaction = await Transaction
               .where("userId", JSON.stringify(user._id))
               .orderBy("_id", "desc")
               .first();
-  
+
             const usrStorage = await Storage
               .where("userId", JSON.stringify(user._id))
               .where("name", data!)
               .first();
-            usrStorage.balance =
-              Number(Number(usrStorage.balance).toPrecision(4)) +
-              Number(Number(lastTransaction.amount).toPrecision(4));
+            usrStorage.balance = Number(Number(usrStorage.balance)) +
+              Number(Number(lastTransaction.amount));
             await usrStorage.update();
-  
+
             lastDialog.lastAction = "finished";
             await lastDialog.update();
-  
+
             text = "Поступление добавлено";
           }
         } else if (lastDialog.name === this.dialogs.cacheOut.name) {
-          if (lastDialog.lastAction === this.dialogs.cacheOut.actions.storageSelect) {
+          if (
+            lastDialog.lastAction ===
+              this.dialogs.cacheOut.actions.storageSelect
+          ) {
             const lastTransaction = await Transaction
               .where("userId", JSON.stringify(user._id))
               .orderBy("_id", "desc")
               .first();
-  
+
             const usrStorage = await Storage
               .where("userId", JSON.stringify(user._id))
               .where("name", data!)
               .first();
-            usrStorage.balance =
-              Number(Number(usrStorage.balance).toPrecision(4)) -
-              Number(Number(lastTransaction.amount).toPrecision(4));
+            usrStorage.balance = Number(Number(usrStorage.balance)) -
+              Number(Number(lastTransaction.amount));
             await usrStorage.update();
-  
+
             lastDialog.lastAction = "finished";
             await lastDialog.update();
-  
+
             text = "Расход добавлен";
           }
         } else if (lastDialog.name === this.dialogs.getBalance.name) {
           if (
-            lastDialog.lastAction === this.dialogs.getBalance.actions.storageSelect
+            lastDialog.lastAction ===
+              this.dialogs.getBalance.actions.storageSelect
           ) {
             if (data === "Сводный") {
               const storageBalance = await Storage
                 .where("userId", JSON.stringify(user._id))
                 .all();
-              let resultBalance = new Number(0.0);
-  
+              let resultBalance = new String();
+
               for (const idx in storageBalance) {
-                resultBalance = Number(resultBalance) +
-                  Number(storageBalance[idx].balance);
+                resultBalance = String(
+                  Number(resultBalance) +
+                    Number(storageBalance[idx].balance),
+                );
               }
-              console.log(Number(resultBalance).toPrecision(2));
-              text = `Суммарный баланс счетов: ${resultBalance.toPrecision(5)}`;
+              console.log(Number(resultBalance));
+              text = `Суммарный баланс счетов: ${
+                resultBalance.slice(0, resultBalance.length - 2)
+              }.${
+                resultBalance.slice(
+                  resultBalance.length - 2,
+                  resultBalance.length,
+                )
+              }`;
             } else {
               const usrStorage = await Storage
                 .where("userId", JSON.stringify(user._id))
                 .where("name", data!)
                 .first();
-              text = `Баланс счёта "${usrStorage.name}": ${
-                Number(usrStorage.balance).toPrecision(5)
-              }`;
+              const balance = String(usrStorage.balance);
+							text = `Баланс счёта "${usrStorage.name}": ${
+                balance.slice(0, balance.length - 2)
+							}.${
+								balance.slice(
+									balance.length - 2,
+									balance.length,
+								)
+							}`;
             }
             //write sequentially
             //   lastDialog.lastAction = "finished";
@@ -435,7 +510,7 @@ export class BotViews {
         chat_id: from.id,
         text,
       });
-  
+
       await this.bot.answerCallbackQuery({
         callback_query_id: id,
       });
