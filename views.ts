@@ -38,7 +38,7 @@ export interface Drop {
   drop: boolean;
 }
 
-var dropDb: Drop = { drop: true };
+var dropDb: Drop = { drop: false };
 
 db.sync(dropDb);
 
