@@ -1,5 +1,5 @@
 export { User }  from "./User.ts"
+export { Currency }  from "./Currency.ts"
 export { Storage }  from "./Storage.ts"
 export { Transaction }  from "./Transaction.ts"
 export { DialogFlow }  from "./DialogFlow.ts"
-export { Currency }  from "./Currency.ts"
